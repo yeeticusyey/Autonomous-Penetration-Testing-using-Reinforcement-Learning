@@ -238,3 +238,110 @@ def new_environment() -> m.Environment:
         vulnerability_library=global_vulnerability_library,
         identifiers=ENV_IDENTIFIERS
     )
+
+
+
+#newly added unworking codes
+import xmlextract
+import jsons
+from cyberbattle.simulation import model as m
+data = xmlextract.processdata('nmapScan.xml')
+for x in data:
+    x[1] = list(dict.fromkeys(x[1]))
+    rules = []
+    for service in x[1]:
+        service = service.split(', ')
+        if 'ALLOW' in service[2]:
+            rules.append('m.ListeningService("{}")'.format(service[0]))
+        rules = list(dict.fromkeys(rules))
+    print(rules)
+    properties = x[2]
+    print(properties)
+    
+test = {
+    '192.16812308': m.NodeInfo(
+        services=[m.ListeningService("HTTPS"),
+                  m.ListeningService("SSH", allowedCredentials=[
+                      "ReusedMySqlCred-web"])],
+        firewall=m.FirewallConfiguration(incoming=default_allow_rules,
+                                         outgoing=default_allow_rules + [
+                                             m.FirewallRule("su", m.RulePermission.ALLOW),
+                                             m.FirewallRule("sudo", m.RulePermission.ALLOW)]),
+        value=100,
+        # If can SSH into server then gets FLAG "Shared credentials with
+        # database user"
+        properties=["MySql", "Ubuntu", "nginx/1.10.3"],
+        owned_string="FLAG: Login using insecure SSH user/password",
+        vulnerabilities=dict(
+            ScanPageContent=m.VulnerabilityInfo(
+                description="LeakedGitHubProjectUrl: Website page content shows a link to GitHub "
+                            "repo",
+                type=m.VulnerabilityType.REMOTE,
+                outcome=m.LeakedNodesId(["GitHubProject"]),
+                reward_string="WEBSITE page content has a link to github -> Github project discovered!",
+                cost=1.0
+            ),
+            ScanPageSource=m.VulnerabilityInfo(
+                description="Website page source contains refrence to browseable "
+                            "relative web directory",
+                type=m.VulnerabilityType.REMOTE,
+                outcome=m.LeakedNodesId(["Website.Directory"]),
+                reward_string="Viewing the web page source reveals a URL to a .txt file and directory on the website",
+                cost=1.0
+            ),
+            CredScanBashHistory=m.VulnerabilityInfo(
+                description="bash history leaking creds - FLAG Stealing "
+                            "credentials for the monitoring user",
+                type=m.VulnerabilityType.LOCAL,
+                outcome=m.LeakedCredentials(credentials=[
+                    m.CachedCredential(node="Website[user=monitor]", port="SSH",
+                                       credential="monitorBashCreds")]),
+                reward_string="FLAG: SSH history revealed credentials for the monitoring user (monitor)",
+                cost=1.0
+            ))),
+}
+
+'''Website": m.NodeInfo(
+        services=[m.ListeningService("HTTPS"),
+                  m.ListeningService("SSH", allowedCredentials=[
+                      "ReusedMySqlCred-web"])],
+        firewall=m.FirewallConfiguration(incoming=default_allow_rules,
+                                         outgoing=default_allow_rules + [
+                                             m.FirewallRule("su", m.RulePermission.ALLOW),
+                                             m.FirewallRule("sudo", m.RulePermission.ALLOW)]),
+        value=100,
+        # If can SSH into server then gets FLAG "Shared credentials with
+        # database user"
+        properties=["MySql", "Ubuntu", "nginx/1.10.3"],
+        owned_string="FLAG: Login using insecure SSH user/password",
+        vulnerabilities=dict(
+            ScanPageContent=m.VulnerabilityInfo(
+                description="LeakedGitHubProjectUrl: Website page content shows a link to GitHub "
+                            "repo",
+                type=m.VulnerabilityType.REMOTE,
+                outcome=m.LeakedNodesId(["GitHubProject"]),
+                reward_string="WEBSITE page content has a link to github -> Github project discovered!",
+                cost=1.0
+            ),
+            ScanPageSource=m.VulnerabilityInfo(
+                description="Website page source contains refrence to browseable "
+                            "relative web directory",
+                type=m.VulnerabilityType.REMOTE,
+                outcome=m.LeakedNodesId(["Website.Directory"]),
+                reward_string="Viewing the web page source reveals a URL to a .txt file and directory on the website",
+                cost=1.0
+            ),
+            CredScanBashHistory=m.VulnerabilityInfo(
+                description="bash history leaking creds - FLAG Stealing "
+                            "credentials for the monitoring user",
+                type=m.VulnerabilityType.LOCAL,
+                outcome=m.LeakedCredentials(credentials=[
+                    m.CachedCredential(node="Website[user=monitor]", port="SSH",
+                                       credential="monitorBashCreds")]),
+                reward_string="FLAG: SSH history revealed credentials for the monitoring user (monitor)",
+                cost=1.0
+            ))),
+'''
+
+
+

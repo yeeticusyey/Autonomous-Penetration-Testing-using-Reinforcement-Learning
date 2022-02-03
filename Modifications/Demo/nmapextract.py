@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
-# %%
 
 
 from bs4 import BeautifulSoup
@@ -19,7 +16,6 @@ def processdata(filename):
         x = str(hostname).partition("OS:")[2].partition(')')[0] + ')'
         ip = host.address['addr']
         if x == ')':
-            print('not found')
             continue
         ports = host.find_all('port')
         temp = []
@@ -34,38 +30,10 @@ def processdata(filename):
         count= []
         for firewall in data[2]:
             if firewall[1] == 'open':
-                rule = firewall[2] +', ' + firewall[0] + ', RulePermission.ALLOW'
+                rule = 'm.ListeningService("{}"), '.format(firewall[2])
                 count.append(rule)
             else:
                 continue
         output.append([data[1], count, data[0]])
     print(output)
     return output
-
-
-
-
-# %%
-
-# %%
-
-
-
-
-
-# %%
-
-# %%
-
-
-# %%
-
-
-
-
-
-# %%
-
-
-
-

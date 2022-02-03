@@ -261,7 +261,7 @@ def vul_handler(name,data):
            # if x['plugin_type']
             vulnames : m.VulnerabilityInfo(
             description = info['description'],
-            type=eval(vultype),
+            type=eval(vultype)[0],
             outcome=m.CustomerData(),
             )''',
                 'SearchEdgeHistory':m.VulnerabilityInfo(

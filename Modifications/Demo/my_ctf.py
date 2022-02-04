@@ -241,7 +241,7 @@ def new_environment() -> m.Environment:
 '''
 
 
-#newly added unworking codes
+#newly added working codes
 import nmapextract
 import jsons
 import Nessusextract
@@ -256,26 +256,38 @@ def vul_handler(name,data):
     for info in required:
         vultype = 'm.VulnerabilityType.{}, '.format(info['plugin_type'].upper())
         vulnames = info['pluginName'].replace(" ", "")
-        print(type(vulnames))
-        vulnerabilities = {
+        vulnerabilities = { 
            # if x['plugin_type']
             vulnames : m.VulnerabilityInfo(
             description = info['description'],
-            type=eval(vultype)[0],
+            type=eval(vultype)[0], #[0] was used as eval convert vultype into a tuple 
             outcome=m.CustomerData(),
-            )''',
+            ),
                 'SearchEdgeHistory':m.VulnerabilityInfo(
                 description="Search web history for list of accessed websites",
                 type=m.VulnerabilityType.LOCAL,
                 outcome=m.LeakedNodesId(['192.168.242.132']),
                 reward_string="Web browser history revealed website URL of interest",
                 cost=1.0
-            )'''
+            ),
+            "CredScan-HomeDirectory":
+                m.VulnerabilityInfo(
+                    description="azurecredential.txt file in home directory",
+                    type=m.VulnerabilityType.LOCAL,
+                    outcome=m.LeakedCredentials(credentials=[
+                        m.CachedCredential(
+                                node="192.168.242.132'",
+                                port="HTTPS",
+                                credential="azuread_user_credentials")]),
+                    reward_string="SSH: cat ~/azurecreds.txt (running as monitor) revealed Azure user credential!",
+                    cost=1.0),
             }
         return vulnerabilities
+
 def addnode(filename):
     data = xmlextract.processdata(filename)
     test = {}
+    node_ids = []
     for x in data:
         x[1] = list(dict.fromkeys(x[1]))
         rules = ''
@@ -296,14 +308,31 @@ def addnode(filename):
                                              outgoing=default_allow_rules + [
                                                  m.FirewallRule("su", m.RulePermission.ALLOW),
                                                  m.FirewallRule("sudo", m.RulePermission.ALLOW)]),
-            value=100,
+            value=0,
             # If can SSH into server then gets FLAG "Shared credentials with
             # database user"
             properties=[propertiesa],
             vulnerabilities= vul_handler(str(x[0]),nessusoutput)
-            
         )
+        node_ids.append(x[0])
         
+    test['client'] = m.NodeInfo(
+    services=[],
+    properties=["CLIENT:Kali"],
+    value=0,
+    vulnerabilities=dict(
+        SearchEdgeHistory=m.VulnerabilityInfo(
+            description="Search web history for list of accessed websites",
+            type=m.VulnerabilityType.LOCAL,
+            outcome=m.LeakedNodesId(node_ids),
+            reward_string="Web browser history revealed website URL of interest",
+            cost=1.0
+        )),
+    agent_installed=True,
+    reimagable=False)
+
+                                         
+                                         
     return test 
     '''rules = ''
         print(x[1])
@@ -326,6 +355,7 @@ def addnode(filename):
                     )),
         }'''
 node_a = addnode('nmapScan.xml')
+print(node_a)
 # Environment constants
 global_vulnerability_library: Dict[VulnerabilityID, VulnerabilityInfo] = dict([])
 def new_environment() -> m.Environment:

@@ -1,6 +1,4 @@
-import js2py
-#tool to enable javascript running in python
-#this tool enables auto translation
+
 import datetime
 import wget 
 import gzip
